@@ -9,7 +9,7 @@ class Solution {
         });
         int count = 1;
         int start = 0;
-        int end = 0;
+        int end = clips[0][1];
         int i = 0;
         if (clips[0][0] != 0) {
             return -1;
@@ -19,6 +19,10 @@ class Solution {
                 end = clips[i][1];
             } else if (clips[i][0] > end) {
                 return -1;
+            } else if (clips[i][1] >= time) {
+                start = clips[i][0];
+                end = clips[i][1];
+                count++;
             } else if (clips[i + 1][0] > end) {
                 start = clips[i][0];
                 end = clips[i][1];
@@ -27,7 +31,7 @@ class Solution {
             i++;
         }
         if (end < time) {
-            if (clips[clips.length - 1][1] < time || clips[i][0] > end) {
+            if (clips[i][1] < time || clips[i][0] > end) {
                 return -1;
             }
             count++;
