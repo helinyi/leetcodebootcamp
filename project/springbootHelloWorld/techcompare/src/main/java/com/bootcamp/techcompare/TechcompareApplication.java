@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootApplication
 @RestController
 @Validated
+@RequestMapping(value = "/search")
 //@RequestMapping(value = "/search")
 public class TechcompareApplication {
 
@@ -61,10 +62,8 @@ public class TechcompareApplication {
 	}
 
 	@GetMapping("/search")
-	public String searchAndFilter(
-			@RequestParam(value = "category", defaultValue = "null") String category,
-			@RequestParam(value = "id", defaultValue = "0") int id,
-			@RequestParam(value = "price", defaultValue = "-100") double price) {
+	public String search(
+			@RequestParam(value = "id", required = false, defaultValue = "0") int id) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			ResponseEntity<String> responseEntity = getAllProducts();
@@ -76,8 +75,44 @@ public class TechcompareApplication {
 
 				// Filter products
 				List<Product> filteredProducts = products.stream()
-						.filter(product -> product.getCategory().equalsIgnoreCase(category))
 						.filter(product -> product.getId() == id)
+						.collect(Collectors.toList());
+
+				// Convert filtered list back to JSON string to return
+				return mapper.writeValueAsString(filteredProducts);
+			} else {
+				// Error fetching products, return appropriate message or handle differently
+				return "Error fetching products";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Error processing request";
+		}
+	}
+
+	@GetMapping("/search")
+	public String search(
+//			@RequestParam(value = "id", defaultValue = "-1") int id,
+			@RequestParam(value = "category", defaultValue = "null") String category,
+			@RequestParam(value = "price", defaultValue = "-100") double price) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			ResponseEntity<String> responseEntity = getAllProducts();
+
+			if(responseEntity.getStatusCode() == HttpStatus.OK) {
+				String json = responseEntity.getBody();
+				// Assuming json is not null and is a valid JSON string of an array of products
+				List<Product> products = mapper.readValue(json, new TypeReference<List<Product>>() {});
+
+//				if (id == -1) {
+//					List<Product> filteredProducts = products.stream()
+//						.filter(product -> product.getId() == id)
+//						.collect(Collectors.toList());
+//				}
+				// Filter products
+				List<Product> filteredProducts = products.stream()
+						.filter(product -> product.getCategory().equalsIgnoreCase(category))
+						.filter(product -> product.getPrice() > (price - 50) && product.getPrice() < (price + 50))
 						.collect(Collectors.toList());
 
 				// Convert filtered list back to JSON string to return
